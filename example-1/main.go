@@ -8,53 +8,58 @@ import (
 )
 
 type Item struct {
-	title string
-	body  string
+	Title string
+	Body  string
 }
 
 var database []Item
 
 type API int
 
+func (a *API) GetDB(title string, response *[]Item) error {
+	*response = database
+	return nil
+}
+
 func (a *API) GetByName(title string, response *Item) error {
 	var resultItem Item
 
 	for _, item := range database {
-		if title == item.title {
+		if title == item.Title {
 			resultItem = item
 			break
 		}
 
 	}
-	response = &resultItem
+	*response = resultItem
 	return nil
 }
 
 func (a *API) AddItem(item Item, response *Item) error {
 	database = append(database, item)
-	response = &item
+	*response = item
 	return nil
 }
 
 func (a *API) EditItem(edit Item, response *Item) error {
 	for index, item := range database {
-		if edit.title == item.title {
+		if edit.Title == item.Title {
 			database[index] = edit
 			break
 		}
 	}
-	response = &edit
+	*response = edit
 	return nil
 }
 
 func DeleteItem(delItem Item, response *Item) error {
 	for index, item := range database {
-		if item.title == delItem.title && item.body == delItem.body {
+		if item.Title == delItem.Title && item.Body == delItem.Body {
 			database = append(database[:index], database[index+1:]...)
 			break
 		}
 	}
-	response = &delItem
+	*response = delItem
 	return nil
 }
 
