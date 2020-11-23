@@ -52,7 +52,7 @@ func (a *API) EditItem(edit Item, response *Item) error {
 	return nil
 }
 
-func DeleteItem(delItem Item, response *Item) error {
+func (a *API) DeleteItem(delItem Item, response *Item) error {
 	for index, item := range database {
 		if item.Title == delItem.Title && item.Body == delItem.Body {
 			database = append(database[:index], database[index+1:]...)
