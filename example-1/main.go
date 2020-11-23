@@ -1,7 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"net/rpc"
 )
 
 type Item struct {
@@ -11,7 +14,9 @@ type Item struct {
 
 var database []Item
 
-func GetByName(title string) Item {
+type API int
+
+func (a *API) GetByName(title string, response *Item) error {
 	var resultItem Item
 
 	for _, item := range database {
@@ -21,53 +26,54 @@ func GetByName(title string) Item {
 		}
 
 	}
-	return resultItem
+	response = &resultItem
+	return nil
 }
 
-func AddItem(item Item) Item {
+func (a *API) AddItem(item Item, response *Item) error {
 	database = append(database, item)
-	return item
+	response = &item
+	return nil
 }
 
-func EditItem(title string, edit Item) Item {
+func (a *API) EditItem(edit Item, response *Item) error {
 	for index, item := range database {
-		if title == item.title {
+		if edit.title == item.title {
 			database[index] = edit
 			break
 		}
 	}
-	return edit
+	response = &edit
+	return nil
 }
 
-func DeleteItem(delItem Item) Item {
+func DeleteItem(delItem Item, response *Item) error {
 	for index, item := range database {
 		if item.title == delItem.title && item.body == delItem.body {
 			database = append(database[:index], database[index+1:]...)
 			break
 		}
 	}
-	return delItem
+	response = &delItem
+	return nil
 }
 
 func main() {
-	fmt.Println("Initial database: ", database)
+	var api = new(API)
+	if err := rpc.Register(api); err != nil {
+		log.Fatal("Error registering API", err)
+	}
 
-	a := Item{"first", "a first item"}
-	b := Item{"second", "a second item"}
-	c := Item{"third", "a third item"}
+	rpc.HandleHTTP()
 
-	AddItem(a)
-	AddItem(b)
-	AddItem(c)
-	fmt.Println("Second database: ", database)
+	listener, err := net.Listen("tcp", ":4040")
+	if err != nil {
+		log.Fatal("Listener error", err)
+	}
 
-	DeleteItem(b)
-	fmt.Println("Third database: ", database)
-
-	EditItem("third", Item{"fourth", "a fourth item"})
-	fmt.Println("Fourth database: ", database)
-
-	x := GetByName("fourth")
-	y := GetByName("first")
-	fmt.Println(x, y)
+	log.Printf("Serving rpc on port %d", 4040)
+	err = http.Serve(listener, nil)
+	if err != nil {
+		log.Fatal("Error serving rpc: ", err)
+	}
 }
